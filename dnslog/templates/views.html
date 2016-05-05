@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>记录</title>
+
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="/static/main.css" rel="stylesheet">
+
+    
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <ul class="nav nav-tabs">
+
+          <li role="presentation" {% ifequal logtype 'dns'%}class="active"{% endifequal%}><a href="/?logtype=dns">DNSLog</a></li>
+
+          <li role="presentation" {% ifequal logtype 'web'%}class="active"{% endifequal%}><a href="/?logtype=web">WebLog</a></li>
+
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="/logout/">Logout</a></li>  
+          </ul>
+        </ul>
+
+        {% ifequal logtype 'dns'%}
+
+        <div class="bs" data-example-id="hoverable-table">
+
+            <table class="table table-hover">
+
+              <thead>
+
+                <tr>
+
+                  <th>#</th>
+
+                  <th>host</th>
+
+                  <th>type</th>
+
+                  <th>date</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {% for dnslog in dnslogs %}
+
+                <tr>
+
+                <th scope="row">{{dnslog.id}}</th>
+
+                <td>{{ dnslog.host }}</td>
+
+                <td>{{ dnslog.type }}</td>
+
+                <td>{{ dnslog.log_time|date:'Y-m-d H:i:s' }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+              </tbody>
+
+            </table>
+
+            <nav>
+
+              <ul class="pagination">
+
+                <li><a class="btn btn-default" href="/?del=dns" role="button">clear</a></li>
+
+                {% ifnotequal dnspage 1%}
+
+                <li>
+
+                  <a href="/?logtype=dns&dnspage={{dnspage | add:-1}}" aria-label="Previous">
+
+                    <span aria-hidden="true">&laquo;</span>
+
+                  </a>
+
+                </li>
+
+                {% endifnotequal%}
+
+                {% for range in pagerange %}
+
+                <li><a href="/?logtype=dns&dnspage={{range}}">{{range}}</a></li>
+
+                {% endfor %}
+
+                {% ifnotequal dnspage numpages%}
+
+                <li>
+
+                  <a href="/?logtype=dns&dnspage={{dnspage|add:1}}" aria-label="Next">
+
+                    <span aria-hidden="true">&raquo;</span>
+
+                  </a>
+
+                </li>
+
+                {% endifnotequal%}
+
+              </ul>
+
+            </nav>
+
+
+
+        </div>
+
+        {% endifequal%}
+
+        {% ifequal logtype 'web'%}
+
+        <div class="bs" data-example-id="hoverable-table">
+
+            <table class="table table-hover">
+
+              <thead>
+
+                <tr>
+
+                  <th>#</th>
+
+                  <th>path</th>
+
+                  <th>ip</th>
+
+                  <th>ua</th>
+
+                  <th>date</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {% for weblog in weblogs %}
+
+                <tr>
+
+                <th scope="row">{{weblog.id}}</th>
+
+                <td>{{ weblog.path }}</td>
+
+                <td>{{ weblog.remote_addr }}</td>
+
+                <td>{{ weblog.http_user_agent }}</td>
+
+                <td>{{ weblog.log_time|date:'Y-m-d H:i:s' }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+              </tbody>
+
+            </table>
+
+            <nav class="center-block">
+
+              <ul class="pagination">
+
+                <li><a class="btn btn-default" href="/?del=web" role="button">clear</a></li>
+
+                {% ifnotequal webpage 1%}
+
+                <li>
+
+                  <a href="/?logtype=web&dnspage={{dnspage | add:-1}}" aria-label="Previous">
+
+                    <span aria-hidden="true">&laquo;</span>
+
+                  </a>
+
+                </li>
+
+                {% endifnotequal%}
+
+                {% for range in pagerange %}
+
+                <li><a href="/?logtype=web&dnspage={{range}}">{{range}}</a></li>
+
+                {% endfor %}
+
+                {% ifnotequal webpage numpages%}
+
+                <li>
+
+                  <a href="/?logtype=web&dnspage={{dnspage|add:1}}" aria-label="Next">
+
+                    <span aria-hidden="true">&raquo;</span>
+
+                  </a>
+
+                </li>
+
+                {% endifnotequal%}
+
+              </ul>
+
+            </nav>
+
+        </div>
+
+        {% endifequal%}
+
+        <div class="bs" data-example-id="hoverable-table">
+
+<textarea class="form-control" rows="10" disabled>
+你的子域名:{{userdomain}} 
+
+API 地址: http://{{admindomain}}/api/{logtype}/{{udomain}}/{hashstr}/
+
+  logtype: 值为 dns 或者 web
+  hashstr: 三级域名字符串
+
+例如：
+判断 123.{{userdomain}} 是否有 dns 解析记录，则 API 请求地址为：http://{{admindomain}}/api/dns/{{udomain}}/123/
+</textarea>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
