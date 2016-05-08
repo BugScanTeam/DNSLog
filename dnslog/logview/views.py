@@ -16,7 +16,8 @@ def index(request):
     if ":" in http_host:
         http_host = http_host.split(':')[0]
     http_user_agent = request.META.get('HTTP_USER_AGENT')
-    remote_addr = request.META.get('HTTP_X_REAL_IP')
+    remote_addr = request.META.get(
+        'HTTP_X_REAL_IP') or request.META.get('REMOTE_ADDR')
     path = http_host + request.get_full_path()
     print http_host
     if http_host == settings.ADMIN_DOMAIN:
