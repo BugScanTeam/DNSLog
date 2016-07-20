@@ -194,5 +194,5 @@ document.head.appendChild(s);
 ---
 
 * [版权声明](./GPL-2.0)
-* [BugScan 社区官网](https://www.bugscan.net)
+* [BugScan 社区官网](http://www.bugscan.net)
 * [DNSLog 示例站点](http://admin.dnslog.link/)

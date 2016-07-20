@@ -35,7 +35,7 @@ class MysqlLogger():
         domain = request.q.qname.__str__()
         if domain.endswith(settings.DNS_DOMAIN + '.'):
             udomain = re.search(
-                r'\.([^\.]+)\.%s\.' % settings.DNS_DOMAIN, domain)
+                r'\.?([^\.]+)\.%s\.' % settings.DNS_DOMAIN, domain)
             if udomain:
                 user = User.objects.filter(udomain__exact=udomain.group(1))
                 if user:
