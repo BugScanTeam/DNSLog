@@ -38,6 +38,8 @@ class MysqlLogger():
                 r'\.?([^\.]+)\.%s\.' % settings.DNS_DOMAIN, domain)
             if udomain:
                 user = User.objects.filter(udomain__exact=udomain.group(1))
+                if not user and domain.strip(".") != settings.ADMIN_DOMAIN:
+                    user = User.objects.filter(udomain__exact='@')
                 if user:
                     dnslog = DNSLog(
                         user=user[0], host=domain, type=QTYPE[request.q.qtype])
