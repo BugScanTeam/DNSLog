@@ -187,7 +187,7 @@
 
                 <li>
 
-                  <a href="/?logtype=web&dnspage={{dnspage | add:-1}}" aria-label="Previous">
+                  <a href="/?logtype=web&webpage={{webpage | add:-1}}" aria-label="Previous">
 
                     <span aria-hidden="true">&laquo;</span>
 
@@ -199,7 +199,7 @@
 
                 {% for range in pagerange %}
 
-                <li><a href="/?logtype=web&dnspage={{range}}">{{range}}</a></li>
+                <li><a href="/?logtype=web&webpage={{range}}">{{range}}</a></li>
 
                 {% endfor %}
 
@@ -207,7 +207,7 @@
 
                 <li>
 
-                  <a href="/?logtype=web&dnspage={{dnspage|add:1}}" aria-label="Next">
+                  <a href="/?logtype=web&webpage={{webpage|add:1}}" aria-label="Next">
 
                     <span aria-hidden="true">&raquo;</span>
 
