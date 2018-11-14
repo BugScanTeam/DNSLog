@@ -29,7 +29,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
 
 INSTALLED_APPS = (
@@ -84,7 +85,6 @@ DATABASES = {
     }
 }
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
@@ -103,8 +103,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # 做dns记录的域名
 DNS_DOMAIN = 'dnslog.link'
 
@@ -114,9 +113,9 @@ ADMIN_DOMAIN = 'admin.dnslog.link'
 
 # NS域名
 
-NS1_DOMAIN = 'ns1.xxx.com'
-NS2_DOMAIN = 'ns2.xxx.com'
+NS1_DOMAIN = 'ns1.bugscan.net'
+NS2_DOMAIN = 'ns2.bugscan.net'
 
 # 服务器外网地址
 
-SERVER_IP = '1.1.1.1'
+SERVER_IP = '112.74.96.129'

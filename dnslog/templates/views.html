@@ -12,7 +12,7 @@
 
     <title>记录</title>
 
-    <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 
     <link href="/static/main.css" rel="stylesheet">
 
@@ -230,13 +230,13 @@
 <textarea class="form-control" rows="10" disabled>
 你的子域名:{{userdomain}} 
 
-API 地址: http://{{admindomain}}/api/{logtype}/{{udomain}}/{hashstr}/
+API 地址: https://{{admindomain}}/api/{logtype}/{{udomain}}/{hashstr}/
 
   logtype: 值为 dns 或者 web
   hashstr: 三级域名字符串
 
 例如：
-判断 123.{{userdomain}} 是否有 dns 解析记录，则 API 请求地址为：http://{{admindomain}}/api/dns/{{udomain}}/123/
+判断 123.{{userdomain}} 是否有 dns 解析记录，则 API 请求地址为：https://{{admindomain}}/api/dns/{{udomain}}/123/
 </textarea>
         </div>
 

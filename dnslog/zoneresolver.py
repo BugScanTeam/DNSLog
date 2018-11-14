@@ -6,7 +6,8 @@ import django
 django.setup()
 import copy
 import re
-from dnslib import RR, QTYPE, RCODE
+import tempfile
+from dnslib import RR, QTYPE, RCODE, TXT
 from dnslib.server import DNSServer, DNSHandler, BaseResolver, DNSLogger
 from logview.models import *
 from dnslog import settings
@@ -32,10 +33,10 @@ class MysqlLogger():
         pass
 
     def log_request(self, handler, request):
-        domain = request.q.qname.__str__()
+        domain = request.q.qname.__str__().lower()
         if domain.endswith(settings.DNS_DOMAIN + '.'):
-            udomain = re.search(
-                r'\.?([^\.]+)\.%s\.' % settings.DNS_DOMAIN, domain)
+            udomain = re.search(r'\.?([^\.]+)\.%s\.' % settings.DNS_DOMAIN,
+                                domain)
             if udomain:
                 user = User.objects.filter(udomain__exact=udomain.group(1))
                 if not user and domain.strip(".") != settings.ADMIN_DOMAIN:
@@ -63,7 +64,8 @@ class ZoneResolver(BaseResolver):
             Stores RRs as a list of (label,type,rr) tuples
             If 'glob' is True use glob match against zone file
         """
-        self.zone = [(rr.rname, QTYPE[rr.rtype], rr) for rr in RR.fromZone(zone)]
+        self.zone = [(rr.rname, QTYPE[rr.rtype], rr)
+                     for rr in RR.fromZone(zone)]
         self.glob = glob
         self.eq = 'matchGlob' if glob else '__eq__'
 
@@ -75,10 +77,16 @@ class ZoneResolver(BaseResolver):
         reply = request.reply()
         qname = request.q.qname
         qtype = QTYPE[request.q.qtype]
+        if qtype == 'TXT':
+            txtpath = os.path.join(tempfile.gettempdir(), str(qname).lower())
+            if os.path.isfile(txtpath):
+                reply.add_answer(
+                    RR(qname, QTYPE.TXT, rdata=TXT(open(txtpath).read().strip())))
         for name, rtype, rr in self.zone:
             # Check if label & type match
-            if getattr(qname, self.eq)(name) and (
-                    qtype == rtype or qtype == 'ANY' or rtype == 'CNAME'):
+            if getattr(qname,
+                       self.eq)(name) and (qtype == rtype or qtype == 'ANY'
+                                           or rtype == 'CNAME'):
                 # If we have a glob match fix reply label
                 if self.glob:
                     a = copy.copy(rr)
@@ -90,7 +98,9 @@ class ZoneResolver(BaseResolver):
                 # add in additional section
                 if rtype in ['CNAME', 'NS', 'MX', 'PTR']:
                     for a_name, a_rtype, a_rr in self.zone:
-                        if a_name == rr.rdata.label and a_rtype in ['A', 'AAAA']:
+                        if a_name == rr.rdata.label and a_rtype in [
+                                'A', 'AAAA'
+                        ]:
                             reply.add_ar(a_rr)
         if not reply.rr:
             reply.header.rcode = RCODE.NXDOMAIN
@@ -104,16 +114,17 @@ def main():
 *.{dnsdomain}.       IN      A       {serverip}
 {dnsdomain}.       IN      A       {serverip}
 '''.format(
-        dnsdomain=settings.DNS_DOMAIN, ns1domain=settings.NS1_DOMAIN,
-        ns2domain=settings.NS2_DOMAIN, serverip=settings.SERVER_IP)
+        dnsdomain=settings.DNS_DOMAIN,
+        ns1domain=settings.NS1_DOMAIN,
+        ns2domain=settings.NS2_DOMAIN,
+        serverip=settings.SERVER_IP)
     resolver = ZoneResolver(zone, True)
     logger = MysqlLogger()
     print("Starting Zone Resolver (%s:%d) [%s]" % ("*", 53, "UDP"))
 
-    udp_server = DNSServer(resolver,
-                           port=53,
-                           address='',
-                           logger=logger)
+    udp_server = DNSServer(resolver, port=53, address='', logger=logger)
     udp_server.start()
+
+
 if __name__ == '__main__':
     main()

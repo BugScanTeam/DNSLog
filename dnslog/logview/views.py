@@ -19,7 +19,6 @@ def index(request):
     remote_addr = request.META.get(
         'HTTP_X_REAL_IP') or request.META.get('REMOTE_ADDR')
     path = http_host + request.get_full_path()
-    print http_host
     if http_host == settings.ADMIN_DOMAIN:
         return login(request)
     elif http_host.endswith(settings.DNS_DOMAIN):
